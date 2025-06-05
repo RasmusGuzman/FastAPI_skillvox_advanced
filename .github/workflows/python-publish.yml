@@ -1,0 +1,47 @@
+name: Python App CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set Up Python Environment
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.11'
+      - name: Install Compatible Version of Click
+        run: |
+          pip install click==7.* # Установка старой версии Click, совместимой с Black
+
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Unit Testing
+        run: |
+          pytest tests
+
+      - name: Static Type Checking
+        run: |
+          mypy src/
+
+      - name: Formatting Check (Black)
+        run: |
+          black --diff --check src/
+
+      - name: Import Sorting Check (Isort)
+        run: |
+          isort --check-only src/
+
+      - name: Style Guide Enforcement (Flake8)
+        run: |
+          flake8 src/

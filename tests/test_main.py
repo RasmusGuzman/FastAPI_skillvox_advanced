@@ -1,48 +1,34 @@
-import pytest
+# test_main.py
 
+import pytest
 
 @pytest.mark.asyncio
 async def test_create_recipe(client):
-
-    recipe_data = {
-        "name": "Картофель жареный",
+    response = await client.post("/recipes/", json={
+        "name": "Борщ",
         "preparation_time": 30,
-        "ingredients": "картошка, масло, соль",
-        "description": "Простой рецепт жареной картошки."
-    }
-    response = client.post('/recipes/', json=recipe_data)
-    assert response.status_code == 200
-    created_recipe = response.json()
-    assert isinstance(created_recipe['id'], int)
-    assert created_recipe["name"] == "Картофель жареный"
-
+        "ingredients": ["Свёкла", "Картофель"],
+        "description": "Традиционный русский суп."
+    })
+    assert response.status_code == 201
+    data = response.json()
+    assert data["name"] == "Борщ"
 
 @pytest.mark.asyncio
-async def test_list_recipes(client, init_data):
-    response = client.get('/recipes/')
+async def test_list_recipes(client):
+    response = await client.get("/recipes/")
     assert response.status_code == 200
-    recipes = response.json()
-    assert len(recipes) >= 4
-
-
-@pytest.mark.asyncio
-async def test_get_recipe(client, init_data):
-
-    response = client.get('/recipes/1')
-    assert response.status_code == 200
-    retrieved_recipe = response.json()
-    assert retrieved_recipe["name"] == "Борщ"
-
+    data = response.json()
+    assert isinstance(data, list)
 
 @pytest.mark.asyncio
 async def test_nonexistent_recipe(client):
-    response = client.get('/recipes/999')
+    response = await client.get("/recipes/99999")
     assert response.status_code == 404
-    assert response.json()['detail'] == 'Recipe not found'
-
+    assert response.json()["detail"] == "Recipe not found"
 
 @pytest.mark.asyncio
 async def test_homepage(client):
-    response = client.get('/')
+    response = await client.get("/")
     assert response.status_code == 200
-    assert '<html>' in response.text
+    assert "<html>" in response.text

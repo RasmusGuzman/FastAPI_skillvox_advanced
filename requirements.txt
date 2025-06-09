@@ -13,3 +13,4 @@ mypy==0.931
 pytest==8.4.0
 requests==2.32.3
 pytest-asyncio==1.0.0
+httpx~=0.25.0

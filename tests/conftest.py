@@ -1,40 +1,43 @@
 import pytest
-from fastapi.testclient import TestClient
-from src.database import Base
-from src.main import app
-from src.models import Recipe
+import asyncio
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
+from fastapi.testclient import TestClient
+from src.main import app
+from src.database import Base
+from src.api.dependencies import get_db
 
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:" 
+# Тестовая база данных в памяти
+TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
-
+# Движок и сессия для тестов
 test_engine = create_async_engine(TEST_DATABASE_URL, echo=True)
 TestSessionLocal = sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False)
 
-
-@pytest.fixture(scope="module")
-async def db():
+# Генерируем фикстуру для подготовки базы данных
+@pytest.fixture(scope="session", autouse=True)
+async def prepare_database():
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    yield TestSessionLocal()
+    yield
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
 
-@pytest.fixture(scope="module")
-def client():
-    return TestClient(app)
+# Переопределяем зависимость get_db для тестов
+@pytest.fixture(scope="function")
+async def client():
+    async def _override_get_db():
+        async with TestSessionLocal() as session:
+            yield session
 
-@pytest.fixture(scope="module")
-async def init_data(db):
-    async with db as session:
-        recipes = [
-            Recipe(name="Борщ", preparation_time=60, ingredients="Свёкла, морковь, картофель", description="Классический борщ"),
-            Recipe(name="Паста Карбонара", preparation_time=30, ingredients="Спагетти, яйца, сыр", description="Итальянская классика"),
-            Recipe(name="Салат Цезарь", preparation_time=20, ingredients="Куриное филе, листья салата", description="Американский салат"),
-            Recipe(name="Сырники", preparation_time=25, ingredients="Творог, яйцо, мука", description="Традиционное блюдо русской кухни")
-        ]
-        session.add_all(recipes)
-        await session.commit()
-        await session.refresh(recipes)
-        yield db
+    app.dependency_overrides[get_db] = _override_get_db
+
+    # Создаем клиент FastAPI
+    async_client = TestClient(app)
+
+    # Выполняем все запросы внутри одного контекста
+    async with async_client as ac:
+        yield ac
+
+    # Возвращаемся к исходному поведению после завершения теста
+    app.dependency_overrides.clear()

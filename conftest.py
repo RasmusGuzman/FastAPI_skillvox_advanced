@@ -1,43 +1,42 @@
-import pytest
-import asyncio
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
-from fastapi.testclient import TestClient
+import pytest_asyncio
+from httpx import AsyncClient
+
 from src.main import app
 from src.database import Base
-from src.api.dependencies import get_db
+from src.test_database import get_async_session, test_engine, TestingSessionLocal
 
-# Тестовая база данных в памяти
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
-# Движок и сессия для тестов
-test_engine = create_async_engine(TEST_DATABASE_URL, echo=True)
-TestSessionLocal = sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False)
-
-# Генерируем фикстуру для подготовки базы данных
-@pytest.fixture(scope="session", autouse=True)
+@pytest_asyncio.fixture(scope="session", autouse=True)
 async def prepare_database():
+    """
+    При сессии: создаём чистую БД перед тестами и удаляем после.
+    """
+    # создаём таблицы
     async with test_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
     yield
+    # чистим после себя
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
 
-# Переопределяем зависимость get_db для тестов
-@pytest.fixture(scope="function")
-async def client():
-    async def _override_get_db():
-        async with TestSessionLocal() as session:
-            yield session
+@pytest_asyncio.fixture
+async def async_session():
+    """
+    Отдельная сессия для каждого теста (можно добавить rollback, если нужно).
+    """
+    async with TestingSessionLocal() as session:
+        yield session
 
-    app.dependency_overrides[get_db] = _override_get_db
+@pytest_asyncio.fixture
+async def client(async_session):
+    """
+    HTTP-клиент httpx.AsyncClient, у которого перекрыта зависимость get_async_session.
+    """
+    async def override_get_async_session():
+        yield async_session
 
-    # Создаем клиент FastAPI
-    async_client = TestClient(app)
+    app.dependency_overrides[get_async_session] = override_get_async_session
 
-    # Выполняем все запросы внутри одного контекста
-    async with async_client as ac:
+    async with AsyncClient(app=app, base_url="http://test") as ac:
         yield ac
-
-    # Возвращаемся к исходному поведению после завершения теста
-    app.dependency_overrides.clear()

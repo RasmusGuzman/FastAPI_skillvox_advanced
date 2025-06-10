@@ -11,7 +11,7 @@ from . import database
 
 app = FastAPI()
 
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory="src/templates")
 
 
 @app.on_event("startup")

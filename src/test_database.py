@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
-
+from src.models import Recipe, Base
 
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///./test.db"
@@ -12,9 +12,6 @@ TestingSessionLocal = sessionmaker(
     test_engine, class_=AsyncSession, expire_on_commit=False
 )
 
-async def get_async_session():
-    async with TestingSessionLocal() as session:
-        try:
-            yield session
-        finally:
-            await session.close()
+async def prepare_database():
+    async with test_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)

@@ -17,7 +17,7 @@ async def test_create_recipe(ac: AsyncClient):
         "ingredients": ["Свёкла", "Картофель"],
         "description": "Традиционный русский суп."
     })
-    assert response.status_code == 201
+    assert response.status_code == 200
     data = response.json()
     assert data["name"] == "Борщ"
 

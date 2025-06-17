@@ -13,4 +13,4 @@ class Recipe(Base):
     ingredients = Column(JSON)
     description = Column(Text)
 
-    model_config = ConfigDict(from_attributes=True)
+    

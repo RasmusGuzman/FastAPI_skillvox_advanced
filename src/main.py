@@ -1,14 +1,12 @@
-from typing import List, AsyncGenerator
+from typing import List
 
-from fastapi import FastAPI, HTTPException, Request, Depends
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from starlette.responses import HTMLResponse
 
-from . import models
-from . import schemas
-from . import database
+from . import database, models, schemas
 
 app = FastAPI()
 
@@ -21,10 +19,11 @@ async def startup():
         await conn.run_sync(models.Base.metadata.create_all)
 
 
-
 @app.post("/recipes/", response_model=schemas.RecipeOut)
-async def create_recipe(recipe_in: schemas.RecipeIn,
-                        session: AsyncSession = Depends(database.get_session)) -> models.Recipe:
+async def create_recipe(
+    recipe_in: schemas.RecipeIn,
+        session: AsyncSession = Depends(database.get_session)
+) -> models.Recipe:
     new_recipe = models.Recipe(**recipe_in.model_dump())
     async with session as sess:
         sess.add(new_recipe)
@@ -46,8 +45,9 @@ async def list_recipes(session: AsyncSession = Depends(database.get_session)):
 
 
 @app.get("/recipes/{recipe_id}", response_model=schemas.RecipeOut)
-async def get_recipe(recipe_id: int,
-                     session: AsyncSession = Depends(database.get_session)):
+async def get_recipe(
+    recipe_id: int, session: AsyncSession = Depends(database.get_session)
+):
     result = await session.execute(
         select(models.Recipe).where(models.Recipe.id == recipe_id)
     )
@@ -64,6 +64,7 @@ async def get_recipe(recipe_id: int,
 
 
 @app.get("/", response_class=HTMLResponse)
-async def async_start(request: Request,
-                      session: AsyncSession = Depends(database.get_session)):
+async def async_start(
+    request: Request, session: AsyncSession = Depends(database.get_session)
+):
     return templates.TemplateResponse("base.html", {"request": request})

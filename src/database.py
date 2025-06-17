@@ -6,10 +6,11 @@ DATABASE_URL = "sqlite+aiosqlite:///./app.py.db"
 
 engine = create_async_engine(DATABASE_URL, echo=True)
 
-LocalSession = sessionmaker(class_=AsyncSession, expire_on_commit=False, bind=engine)
+LocalSession = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 
 Base = declarative_base()
 
-def get_session():
+def get_session() -> AsyncSession:
     session = LocalSession()
     return session
+

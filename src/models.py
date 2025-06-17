@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text
+from sqlalchemy import Column, Integer, String, Text, JSON
 
 from .database import Base
 
@@ -10,5 +10,5 @@ class Recipe(Base):
     name = Column(String(100), nullable=False)
     views_count = Column(Integer, default=0)
     preparation_time = Column(Integer, nullable=False)
-    ingredients = Column(Text)
+    ingredients = Column(JSON)
     description = Column(Text)

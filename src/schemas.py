@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 class BaseRecipe(BaseModel):
     name: str
@@ -6,6 +6,8 @@ class BaseRecipe(BaseModel):
     ingredients: list[str]
     description: str
 
+    model_config = ConfigDict(from_attributes=True)
+    
 class RecipeIn(BaseRecipe):
     ...
 

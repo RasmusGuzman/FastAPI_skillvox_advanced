@@ -42,7 +42,7 @@ async def list_recipes(session: AsyncSession = Depends(database.get_session)):
 
     my_base = result.scalars().all()
 
-    return [schemas.AllRecipeOut.from_orm(recipe) for recipe in my_base]
+    return [schemas.AllRecipeOut.model_validat(recipe) for recipe in my_base]
 
 
 @app.get("/recipes/{recipe_id}", response_model=schemas.RecipeOut)
@@ -60,7 +60,7 @@ async def get_recipe(recipe_id: int,
     await session.commit()
     await session.refresh(recipe)
 
-    return recipe
+    return schemas.RecipeOut.model_validate(recipe)
 
 
 @app.get("/", response_class=HTMLResponse)

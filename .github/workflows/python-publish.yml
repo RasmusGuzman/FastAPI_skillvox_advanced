@@ -30,10 +30,6 @@ jobs:
         run: |
           pytest tests
 
-      - name: Static Type Checking
-        run: |
-          mypy src/ --strict
-
       - name: Formatting Check (Black)
         run: |
           black --diff --check src/
@@ -45,3 +41,7 @@ jobs:
       - name: Style Guide Enforcement (Flake8)
         run: |
           flake8 src/
+
+      - name: Static Type Checking
+        run: |
+          mypy src/ --strict

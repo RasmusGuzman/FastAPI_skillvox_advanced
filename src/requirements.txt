@@ -16,3 +16,4 @@ pytest-asyncio==1.0.0
 httpx~=0.25.0
 Jinja2==3.1.6
 pydantic-core==2.15.0
+pydantic>=2.0

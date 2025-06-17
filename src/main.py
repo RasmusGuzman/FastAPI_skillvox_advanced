@@ -25,7 +25,7 @@ async def startup():
 @app.post("/recipes/", response_model=schemas.RecipeOut)
 async def create_recipe(recipe_in: schemas.RecipeIn,
                         session: AsyncSession = Depends(database.get_session)) -> models.Recipe:
-    new_recipe = models.Recipe(**recipe_in.dict())
+    new_recipe = models.Recipe(**recipe_in.model_dump())
     async with session as sess:
         sess.add(new_recipe)
         await sess.commit()

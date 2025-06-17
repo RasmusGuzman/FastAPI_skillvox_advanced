@@ -36,7 +36,7 @@ jobs:
 
       - name: Import Sorting Check (Isort)
         run: |
-          isort --check-only src/
+          isort --check-only --profile black src/
 
       - name: Style Guide Enforcement (Flake8)
         run: |

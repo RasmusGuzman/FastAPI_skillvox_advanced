@@ -32,7 +32,7 @@ jobs:
 
       - name: Static Type Checking
         run: |
-          mypy src/
+          mypy src/ --strict
 
       - name: Formatting Check (Black)
         run: |

@@ -16,13 +16,12 @@ class RecipeOut(BaseModel):
     views_count: int
     preparation_time: int
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
+
 
 class AllRecipeOut(BaseModel):
     name: str
     views_count: int
     preparation_time: int
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
